@@ -1,4 +1,6 @@
+import asyncio
 from contextlib import asynccontextmanager
+from functools import partial
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel
@@ -104,7 +106,8 @@ async def ingest_endpoint(
         filename = upload.filename or "unknown.pdf"
 
         try:
-            ingest_file(filename, content_type, file_bytes)
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, partial(ingest_file, filename, content_type, file_bytes))
             accepted_files.append(filename)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
@@ -129,14 +132,20 @@ async def query_endpoint(
     request: Request,
     body: QueryRequest,
 ) -> QueryResponse:
+    if not body.question or not body.question.strip():
+        raise HTTPException(status_code=400, detail="Question must not be empty.")
+    if len(body.question.strip()) < 3:
+        raise HTTPException(status_code=400, detail="Question is too short.")
+
     if vector_store.count() == 0:
         raise HTTPException(
             status_code=400,
             detail="Knowledge base is empty. Please ingest PDF files first.",
         )
 
-    retrieved_chunks, insufficient_evidence = retrieve(body.question)
-    return generate(body.question, retrieved_chunks, insufficient_evidence)
+    loop = asyncio.get_event_loop()
+    retrieved_chunks, insufficient_evidence = await loop.run_in_executor(None, partial(retrieve, body.question.strip()))
+    return await loop.run_in_executor(None, partial(generate, body.question.strip(), retrieved_chunks, insufficient_evidence))
 
 
 @app.get("/files", summary="List all ingested files in the knowledge base", tags=["System"])
