@@ -215,7 +215,7 @@ def _build_citations(
     Build Citation objects for chunks actually referenced in the answer.
 
     Parses inline [source: filename, page N] tags from the answer text.
-    Falls back to top-3 chunks by retrieval score if no inline citations found.
+    Returns empty list if no inline citations found — avoids showing irrelevant sources.
     """
     cited_refs: list[tuple[str, int]] = []
     for match in re.finditer(
@@ -252,17 +252,6 @@ def _build_citations(
                     page_number=chunk.page_number,
                     excerpt=_make_excerpt(chunk.text),
                 ))
-    else:
-        for chunk, _ in chunks[:3]:
-            key = (chunk.source_file, chunk.page_number)
-            if key not in seen:
-                seen.add(key)
-                citations.append(Citation(
-                    source_file=chunk.source_file,
-                    page_number=chunk.page_number,
-                    excerpt=_make_excerpt(chunk.text),
-                ))
-
     return citations
 
 

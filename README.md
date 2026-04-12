@@ -91,7 +91,7 @@ flowchart TD
         N --> P[RRF Fusion\nReciprocal Rank Fusion]
         O --> P
         P --> Q[LLM Re-rank\ncross-encoder]
-        Q --> R{Top score\n≥ 0.35?}
+        Q --> R{Top score\n≥ 0.70?}
         R -->|No| S([Insufficient evidence])
         R -->|Yes| T[Generate answer\nmistral-large-latest]
         T --> U[Hallucination filter\nLLM evidence check]
@@ -166,7 +166,7 @@ When you ask a question:
 
 4. **LLM re-ranking** — top candidates are re-ranked by the LLM as a cross-encoder for final relevance ordering
 
-5. **Threshold filter** — If the top cosine score < 0.35, returns "insufficient evidence" instead of hallucinating
+5. **Threshold filter** — If the top cosine score < 0.70, returns "insufficient evidence" instead of hallucinating
 
 6. **Generation** — Mistral `mistral-large-latest` called with:
    - Intent-specific system prompt (factual / list / table)
