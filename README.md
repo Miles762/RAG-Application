@@ -1,4 +1,4 @@
-# StackAI RAG
+#  RAG
 
 A Retrieval-Augmented Generation (RAG) backend built with FastAPI and Mistral AI. Upload PDF files and ask natural-language questions — the system retrieves the most relevant content and generates grounded, cited answers.
 
